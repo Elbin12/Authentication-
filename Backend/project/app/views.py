@@ -1,15 +1,22 @@
 from django.shortcuts import render
 from rest_framework import generics
-
 from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 
-from .models import User
+
 from .serializers import userSerializer
 
 # Create your views here.
 
 
 
-class sampleView(generics.ListCreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = userSerializer
+class sampleView(APIView):
+    # queryset = User.objects.all()
+    # serializer_class = userSerializer
+
+    def post(self, request):
+        data = request.data
+        print(data,'user data')
+        return Response({'message': 'Data received'}, status=status.HTTP_200_OK)
+
