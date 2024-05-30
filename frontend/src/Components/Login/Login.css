@@ -1,0 +1,34 @@
+.login{
+    text-align: center;
+    border: 1px solid rgb(189, 189, 189);
+    border-radius: 4px;
+    padding: 20px;
+}
+
+.loginform{
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+}
+
+.loginform input{
+    font-size: medium;
+    border: 0;
+    border-bottom: 1px solid rgb(186, 186, 186);
+    width: 240px;
+    height: 30px;
+    outline: none;
+}
+
+.loginform input:focus{
+    border-bottom:1px solid rgb(131, 158, 181); 
+}
+
+.loginform button{
+    cursor: pointer;
+    width: 245px;
+    height: 30px;
+    border: 1px solid rgb(188, 188, 188);
+    border-radius: 4px  ;
+    background-color: rgb(131, 158, 181);   
+}

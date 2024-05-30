@@ -9,7 +9,8 @@ from django.conf.urls.static import static
 
 
 urlpatterns = [
-    path('', views.sampleView.as_view(),name='sample-view'),
+    path('register/', views.Register.as_view(),name='sample-view'),
+    path('login/', views.LoginView.as_view(),name='sample-view'),
 ]
 
 
