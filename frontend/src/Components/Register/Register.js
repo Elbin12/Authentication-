@@ -4,8 +4,10 @@ import './Register.css'
 import axios from "axios";
 
 import {api} from '../../axios'
+import { useNavigate } from "react-router-dom";
 
 function Register(){
+    const navigate = useNavigate();
 
     const [first_name, setFirst_name] = useState('');
     const [last_name, setLast_name] = useState('');
@@ -31,6 +33,9 @@ function Register(){
             setFirst_nameError(res.data.first_name)
             setLast_nameError(res.data.last_name)
             setPasswordError(res.data.password)
+            if (res.data.message){
+                navigate('/login')
+            }
         })
         .catch(error=>{
             console.log(error.email, 'error');

@@ -1,14 +1,14 @@
 import React, { Fragment } from "react";
-import Home from "../Components/Home/Home";
+import Profile from "../Components/Profile/profile";
 import Navbar from "../Components/Navbar/Navbar";
 
-function HomePage(){
+function ProfilePage(){
     return (
         <Fragment>
-            <Navbar />
-            <Home />
+            <Navbar />  
+            <Profile/>
         </Fragment>
     )
 }
 
-export default HomePage
+export default ProfilePage

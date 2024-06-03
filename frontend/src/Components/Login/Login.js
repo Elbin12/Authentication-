@@ -1,11 +1,14 @@
 import React, { useState} from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import './Login.css'
 
 import axios from "axios";
 import { api } from "../../axios";
 
 function Login(){
+
+    const location = useLocation();
+    const message = location.state?.message;
 
 
     const navigate = useNavigate();
@@ -21,7 +24,15 @@ function Login(){
         }
         api.post('login/', data).then(res=>{
             console.log(res.data,'kk');
-            navigate('/home');
+            const { access, refresh } = res.data;
+            localStorage.setItem('access_token', access);
+            localStorage.setItem('refresh_token', refresh);
+            console.log('Login successful:', res.data);
+            if (res.data.isAdmin){
+                navigate('/admin/home');
+            }else{
+                navigate('/home');
+            }
         })
         .catch(error=>{
             console.log(error.response.data, 'error');
@@ -40,7 +51,7 @@ function Login(){
                     <br />
                     <input type="password" onChange={(e)=>{setPassword(e.target.value)}} placeholder="Password"/>
                     <br />
-                    <p style={{margin:0, fontSize:'12px', color:'red'}}>{mainError? mainError:''}</p>
+                    <p style={{margin:0, fontSize:'12px', color:'red'}}>{message? message:mainError}</p>
                     <br />
                     <button type="submit" onClick={handleSubmit}>Log In</button>
                 </div>
