@@ -13,19 +13,32 @@ function Register(){
     const [last_name, setLast_name] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
 
     const [first_nameError, setFirst_nameError] = useState('');
     const [last_nameError, setLast_nameError] = useState('');
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
 
+    const handlefirst_name = (e)=>{
+        if(e.target.value.length < 3){
+            setFirst_nameError('name should have more than 3 characters')
+        }else{
+            setFirst_nameError('')
+            setFirst_name(e.target.value)
+        }
+    }
+
     const handleSubmit = ()=>{
         const userData = {
             first_name: first_name,
             last_name:last_name,
             email:email,
-            password: password
+            password: password,
+            confirm_password:confirmPassword
         }
+
+        
 
         api.post('/register/', userData).then(res=>{
             console.log(res.data,'gs')
@@ -33,6 +46,9 @@ function Register(){
             setFirst_nameError(res.data.first_name)
             setLast_nameError(res.data.last_name)
             setPasswordError(res.data.password)
+            if (res.data.non_field_errors){
+                setPasswordError(res.data.non_field_errors)
+            }
             if (res.data.message){
                 navigate('/login')
             }
@@ -48,7 +64,7 @@ function Register(){
                 <div className="signupform">
                     <div className="username">
                         <div    >
-                            <input type="text" placeholder="First name" onChange={(e)=>{setFirst_name(e.target.value)}}/>
+                            <input type="text" placeholder="First name" onChange={(e)=>{handlefirst_name(e)}}/>
                             <p style={{margin:0, fontSize:'9px', color:'red', textAlign:'start'}}>{first_nameError? first_nameError:''}</p>
                         </div>
                         <div>
@@ -63,7 +79,7 @@ function Register(){
                     <input type="password" placeholder="Password" onChange={(e)=>{setPassword(e.target.value)}}/>
                     <p style={{margin:0, fontSize:'9px', color:'red'}}>{passwordError? passwordError:''}</p>
                     <br />
-                    <input type="password" placeholder="Re-Enter password"/>
+                    <input type="password" onChange={(e)=>{setConfirmPassword(e.target.value)}} placeholder="Re-Enter password"/>
                     <p style={{margin:0, fontSize:'9px', color:'red'}}>{passwordError? passwordError:''}</p>
                     <br />
                     <button type="submit" onClick={handleSubmit}>Sign Up</button>

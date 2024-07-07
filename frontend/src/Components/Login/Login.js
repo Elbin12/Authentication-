@@ -2,8 +2,11 @@ import React, { useState} from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import './Login.css'
 
-import axios from "axios";
 import { api } from "../../axios";
+import SetCookie from "../../Cookies/SetCookie";
+
+import { useDispatch } from "react-redux";
+import { fetchProfile } from "../../redux/Actions/ProfileAction";
 
 function Login(){
 
@@ -12,33 +15,43 @@ function Login(){
 
 
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     
     const [mainError, setmainError] = useState('');
 
-    const handleSubmit = async ()=>{
+    const handleSubmit = async () => {
         let data = {
             email,
             password
         }
-        api.post('login/', data).then(res=>{
-            console.log(res.data,'kk');
-            const { access, refresh } = res.data;
-            localStorage.setItem('access_token', access);
-            localStorage.setItem('refresh_token', refresh);
+    
+        try {
+            const res = await api.post('login/', data);
+            console.log(res.data, 'kk');
             console.log('Login successful:', res.data);
-            if (res.data.isAdmin){
-                navigate('/admin/home');
-            }else{
-                navigate('/home');
+    
+            const fetchdata = async () => {
+                const userinfo = await dispatch(fetchProfile({ navigate, dispatch })).unwrap();
+                console.log(userinfo, 'userinfo');
+                SetCookie('userInfo', JSON.stringify(userinfo));
             }
-        })
-        .catch(error=>{
+    
+            await fetchdata();
+    
+            if (res.data.isAdmin) {
+                navigate('/admin/home',{replace:true});
+            } else {
+                navigate('/home',{replace:true});
+                console.log(res.data);
+            }
+        } catch (error) {
             console.log(error.response.data, 'error');
-            setmainError(error.response.data.detail)
-        })
+            setmainError(error.response.data.detail);
+        }
     }
+
 
     return(
         <div style={{display:'flex', justifyContent:'center', alignItems:'center', height:'700px'}}>

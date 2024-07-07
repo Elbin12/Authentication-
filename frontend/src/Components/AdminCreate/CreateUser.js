@@ -23,7 +23,7 @@ function CreateUser(){
     const accessToken = localStorage.getItem('access_token');
 
     useEffect(()=>{
-        console.log(Logined_user.isAdmin,'kgnjfj');
+        console.log(Logined_user,'kgnjfj');
         if(Logined_user.isAdmin==='False'){
             navigate('/login', { state: { message: 'You must be an admin to access this page.' } })
         }
@@ -37,11 +37,7 @@ function CreateUser(){
             setPasswordError('Enter the same password')
         }
         else{
-            api.post('register/', data,{
-                headers: {
-                    Authorization: `Bearer ${accessToken}`
-                }
-            }).then((res)=>{
+            api.post('register/', data).then((res)=>{
                 console.log(res.data);
                 setEmailError(res.data.email)
                 setFirst_nameError(res.data.first_name)

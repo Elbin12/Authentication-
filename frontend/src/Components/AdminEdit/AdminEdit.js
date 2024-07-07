@@ -1,12 +1,17 @@
 import React, {useState} from 'react'
 import { useSelector, useDispatch} from "react-redux";
 import { api } from '../../axios';
+import { setSelectedusers } from '../../redux/user';
+import SetCookie from '../../Cookies/SetCookie';
 
 
 function AdminEdit(){
     const user = useSelector(state=>state.user.user)
     const selected_user = useSelector(state => state.user.selectedUser)
     console.log(selected_user, user)
+
+    const dispatch = useDispatch()
+
 
     const accessToken = localStorage.getItem('access_token');
     console.log(accessToken);
@@ -24,12 +29,10 @@ function AdminEdit(){
             email:email
         }
         console.log(data,'data');
-        api.post('edit/',data,{
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            }
-        }).then((res)=>{
-            console.log(res)
+        api.post('edit/',data).then((res)=>{
+            console.log(res.data,'ldfkgdgdg')
+            dispatch(setSelectedusers(res.data))
+            SetCookie('selectedUser',JSON.stringify(res.data))
         })
     }
 

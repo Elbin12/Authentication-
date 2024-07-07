@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import {api} from '../../axios'
+import {BASE_URL, api} from '../../axios'
 import {useDispatch, useSelector} from 'react-redux';
-
-import { setUser } from "../../redux/user";
 import { useNavigate } from "react-router-dom";
+import { Post } from "../../redux/Actions/PostRequest";
+
+import './Profile.css';
 
 function Profile(){
     const navigate = useNavigate();
@@ -17,27 +17,6 @@ function Profile(){
     const dispatch = useDispatch();
     const user = useSelector(state => state.user.user);
 
-    const accessToken = localStorage.getItem('access_token');
-    useEffect(() => {
-        console.log('Selected file:', pic);
-    }, [pic]); 
-    useEffect(()=>{
-        const fetchProfile = async ()=>{
-            await api.get('profile/',{
-                headers: {
-                    Authorization: `Bearer ${accessToken}`
-                }
-            }).then((res)=>{
-                console.log(res, 'kk');
-                dispatch(setUser(res.data.message))
-
-            }).catch((error)=>{
-                navigate('/login')
-            })
-        }
-        fetchProfile();
-    },[dispatch])
-    console.log(user,'user')
 
     const handleSubmit = async ()=>{
         const updatedData = {
@@ -46,21 +25,13 @@ function Profile(){
             email:email,
             pic:pic,
         }
-        try{
-            const response = await api.post('update/', updatedData,{
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    'Content-Type': 'multipart/form-data'
-                }
-            })
-            console.log(response, updatedData)
-        }
-        catch(error){
-            console.log(error.response)
-        }
-        
+        const url='update/'
+        dispatch(Post({ navigate, dispatch, url, updatedData}))
+        setPic('')
+        document.getElementById('fileInput').value=null;
     }
-    console.log(pic, email, 'llll')
+    
+    console.log(pic, 'llll')
     const handleFileChange = (event) => {
         const selectedFile = event.target.files[0];
         setPic(selectedFile);
@@ -72,26 +43,32 @@ function Profile(){
             <h2>Profile</h2>
             <div style={{ width:'20%',}}>
             <div>
-                <h2>{user? `${user.first_name} ${user.last_name}` : ''}</h2>
+                <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+                    <img style={{width:'40px', height:'40px', objectFit:'cover', border:'2px solid #88c1c0', borderRadius:'50px'}} src={user?`${BASE_URL}${user.profile_pic}`:''} alt="" />
+                    <h2>{user? `${user.first_name} ${user.last_name}` : ''}</h2>
+                </div>
                 <h4>{user? `${user.email}`:''}</h4>
             </div>
             <div style={{display:'flex', width:'110%', flexDirection:'column', border:'1px solid #bdbdbd', padding:'30px'}}>
                 <h3>Edit Profile Informations</h3>
                 <label htmlFor="">First name:</label>
                 <br />
-                <input type="text" placeholder={user? `${user.first_name}`:''} onChange={(e)=>{setFirst_name(e.target.value)}} />
+                <input type="text" defaultValue={user? `${user.first_name}`:''} onChange={(e)=>{setFirst_name(e.target.value)}} />
                 <br />
                 <label htmlFor="">Last name:</label>
                 <br />
-                <input type="text" placeholder={user? `${user.last_name}`:''} onChange={(e)=>{setLast_name(e.target.value)}} />
+                <input type="text" defaultValue={user? `${user.last_name}`:''} onChange={(e)=>{setLast_name(e.target.value)}} />
                 <br />
                 <label htmlFor="">Email:</label>
                 <br />
-                <input type="text" placeholder={user? `${user.email}`:''} onChange={(e)=>{setEmail(e.target.value)}} />
+                <input type="text"  defaultValue={user? `${user.email}`:''} onChange={(e)=>{setEmail(e.target.value)}} />
                 <br />
                 <label htmlFor="">Upload profile image</label>
                 <br />
-                <input type="file" onChange={handleFileChange} />
+                <input id="fileInput" type="file" onChange={handleFileChange} />
+                <div style={{width:'150px'}}>
+                    <img id="uploadimg" style={{width:'100%'}} src={pic?URL.createObjectURL(pic):''} alt="" />
+                </div>
                 <br />
                 <button onClick={handleSubmit}>Submit</button>
             </div>

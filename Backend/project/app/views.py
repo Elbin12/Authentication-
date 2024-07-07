@@ -12,13 +12,15 @@ from .serializers import userSerializer, UserUpdateSerializer
 
 import jwt, datetime
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from django.conf import settings
 # Create your views here.
 
 
 
 class AdminOnly(permissions.BasePermission):
     def has_permission(self, request, view):
-        print(request.user, request.user.is_staff)
+        print(request.user, request.user.is_staff,'klkl')
         return request.user and request.user.is_staff
 
 
@@ -31,13 +33,14 @@ class Register(APIView):
         data = request.data
         print(data)
         serializer = userSerializer(data=data)
-        if not serializer.is_valid():
+        if serializer.is_valid():
+            CustomUser.objects.create_user(email=serializer.validated_data['email'], first_name=serializer.validated_data['first_name'], password=serializer.validated_data['password'], last_name=serializer.validated_data['last_name'])
+            print(serializer.data,'lsllsl')
+            print(data,'user data')
+            return Response({'message': 'Data received'}, status=status.HTTP_200_OK)
+        else:
+            print(serializer.errors)
             return Response(serializer.errors)
-        
-        CustomUser.objects.create_user(email=serializer.validated_data['email'], first_name=serializer.validated_data['first_name'], password=serializer.validated_data['password'], last_name=serializer.validated_data['last_name'])
-        print(serializer.data)
-        print(data,'user data')
-        return Response({'message': 'Data received'}, status=status.HTTP_200_OK)
 
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -59,18 +62,34 @@ class LoginView(APIView):
         refresh = RefreshToken.for_user(user)
         refresh["first_name"] = str(user.first_name)
         content = {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
             'isAdmin': user.is_superuser,
         }
 
-        return Response(content, status=status.HTTP_200_OK)
+        response = Response(content, status=status.HTTP_200_OK)
+
+        response.set_cookie(
+            key = settings.SIMPLE_JWT['AUTH_COOKIE'],
+            value = str(refresh.access_token),
+            secure = settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+            httponly = settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
+            samesite = settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
+        )
+
+        response.set_cookie(
+            key = 'refresh_token',
+            value = str(refresh),
+            secure = settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+            httponly = settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
+            samesite = settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
+        )
+        print(response, 'response')
+        return response
 
 
 class Profile(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
-        print('user', request.user)
+        print('user', request)
         user_profile = CustomUser.objects.get(email=request.user)
         serializer = userSerializer(user_profile)
         print(user_profile, serializer.data)
@@ -81,7 +100,7 @@ class UpdateProfile(APIView):
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = (MultiPartParser, FormParser)
     def post(self, request):
-        print('lll', request.data)
+        print('lll', request.data, request.user)
 
         user_profile = UserProfile.objects.get_or_create(user=request.user)[0]
         first_name = request.data.get('first_name')
@@ -100,7 +119,9 @@ class UpdateProfile(APIView):
         if pic:
             user_profile.profile_pic = pic
         user_profile.save()
-        return Response({'message':'updated'})
+        user_profile = CustomUser.objects.get(email=request.user)
+        serializer = userSerializer(user_profile)
+        return Response(serializer.data)
 
 
 class AdminHome(APIView):
@@ -114,16 +135,23 @@ class AdminHome(APIView):
 class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def post(self, request):
-        print(request.user,'llll')
+        print(request,'llll',request.COOKIES)
+        print('vannu')
+
         logout(request)
         try:
-            refresh_token = request.data["refresh_token"]
+            refresh_token = request.COOKIES.get("refresh_token")
             print(refresh_token,'token')
             token = RefreshToken(refresh_token)
             print('000')
             token.blacklist()
             print('pppp')
-            return Response(status=status.HTTP_205_RESET_CONTENT)
+            response = Response(status=status.HTTP_205_RESET_CONTENT)
+            print(';;')
+            response.delete_cookie('refresh_token')
+            response.delete_cookie('access_token')
+            response.delete_cookie('csrftoken')
+            return response
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -147,8 +175,8 @@ class AdminEdit(APIView):
         if email:
             user_profile.email = email
         user_profile.save()
-
-        return Response(status=status.HTTP_200_OK)
+        serializer = userSerializer(user_profile)
+        return Response(serializer.data,status=status.HTTP_200_OK)
 
 
 class AdminDelete(APIView):

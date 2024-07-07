@@ -4,7 +4,8 @@ import axios from "axios";
 import { useSelector, useDispatch} from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 
-import { setUsers, setSelectedusers} from "../../redux/user";
+import { setUsers, setSelectedusers, setCount} from "../../redux/user";
+import SetCookie from "../../Cookies/SetCookie";
 function AdminHome(){
 
     const [error, setError] = useState();
@@ -19,11 +20,7 @@ function AdminHome(){
     console.log(Logined_user,'dags')
     
     const fetchUsers= ()=>{
-        api.get('adminpage/',{
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            }
-        }).then((res)=>{
+        api.get('adminpage/').then((res)=>{
             console.log(res.data)
             dispatch(setUsers(res.data))
         }).catch((error)=>{
@@ -31,7 +28,8 @@ function AdminHome(){
         })
     }
     useEffect(()=>{
-        if(Logined_user.isAdmin==='False'){
+        console.log(Logined_user,'loginned');
+        if(Logined_user && Logined_user.isAdmin==='False'){
             navigate('/login', { state: { message: 'You must be an admin to access this page.' } })
         }
         fetchUsers();
@@ -42,16 +40,13 @@ function AdminHome(){
 
     const handleClick =(user)=>{
         dispatch(setSelectedusers(user))
+        SetCookie('selectedUser',JSON.stringify(user))
         navigate('/admin/edit')
     }
 
     const deleteUser =(user)=>{
-        api.post('delete/', user, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            }
-        }).then((res)=>{
-            console.log(res);
+        api.post('delete/', user).then((res)=>{
+            console.log(res, user);
             fetchUsers();
         })
     }
@@ -66,16 +61,14 @@ function AdminHome(){
                 <div style={{display:'flex', alignItems:'center', gap:'20px'}}>
                     <h3>Search User</h3>
                     <input style={{height:'20px'}}  type="text" placeholder="search user...." onChange={(e)=>{
-                        api.post('search/',{search:e.target.value},{
-                            headers: {
-                                Authorization: `Bearer ${accessToken}`
-                            }
-                        }).then((res)=>{
-                            console.log(res.data)
+                        api.post('search/',{search:e.target.value}).then((res)=>{
+                            console.log(res.data,'data')
                             dispatch(setUsers(res.data))
+                            dispatch(setCount(res.data.length))
                             setError('')
                         }).catch((error)=>{
                             console.log(error.response.data.error)
+                            dispatch(setCount(0))
                             setError(error.response.data.error)  
                         })
                     }}/>
